@@ -40,6 +40,8 @@ services:
     depends_on:
       - config-server
       - eureka-discovery-server
+      - loans-microservice
+      - cards-microservice
     deploy:
       restart_policy:
         condition: on-failure
@@ -49,6 +51,7 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: default
       SPRING_CONFIG_IMPORT: configserver:http://config-server:8071/
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-discovery-server:8070/eureka/
   
   loans-microservice:
     image: joydeepchowdhury/loans-microservice:0.0.1-SNAPSHOT
@@ -59,6 +62,7 @@ services:
       - my-network
     depends_on:
       - config-server
+      - eureka-discovery-server
     deploy:
       restart_policy:
         condition: on-failure
@@ -68,6 +72,7 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: default
       SPRING_CONFIG_IMPORT: configserver:http://config-server:8071/
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-discovery-server:8070/eureka/
     
   cards-microservice:
     image: joydeepchowdhury/cards-microservice:0.0.1-SNAPSHOT
@@ -78,6 +83,7 @@ services:
       - my-network
     depends_on:
       - config-server
+      - eureka-discovery-server
     deploy:
       restart_policy:
         condition: on-failure
@@ -87,6 +93,7 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: default
       SPRING_CONFIG_IMPORT: configserver:http://config-server:8071/
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-discovery-server:8070/eureka/
       
 networks:
   my-network:

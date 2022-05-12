@@ -39,15 +39,41 @@ services:
     depends_on:
       - config-server
       - eureka-discovery-server
+      - loans-microservice
+      - cards-microservice
     deploy:
       restart_policy:
         condition: on-failure
-        delay: 5s
+        delay: 30s
         max_attempts: 3
         window: 120s
     environment:
       SPRING_PROFILES_ACTIVE: prod
       SPRING_CONFIG_IMPORT: configserver:http://config-server:8071/
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-discovery-server:8070/eureka/
+      
+  accounts-microservice-second:
+    image: joydeepchowdhury/accounts-microservice:0.0.1-SNAPSHOT
+    mem_limit: 700m
+    ports:
+      - "8081:8080"
+    networks:
+      - my-network
+    depends_on:
+      - config-server
+      - eureka-discovery-server
+      - loans-microservice
+      - cards-microservice
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 30s
+        max_attempts: 3
+        window: 120s
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_CONFIG_IMPORT: configserver:http://config-server:8071/
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-discovery-server:8070/eureka/
   
   loans-microservice:
     image: joydeepchowdhury/loans-microservice:0.0.1-SNAPSHOT
@@ -58,15 +84,17 @@ services:
       - my-network
     depends_on:
       - config-server
+      - eureka-discovery-server
     deploy:
       restart_policy:
         condition: on-failure
-        delay: 5s
+        delay: 30s
         max_attempts: 3
         window: 120s
     environment:
       SPRING_PROFILES_ACTIVE: prod
       SPRING_CONFIG_IMPORT: configserver:http://config-server:8071/
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-discovery-server:8070/eureka/
     
   cards-microservice:
     image: joydeepchowdhury/cards-microservice:0.0.1-SNAPSHOT
@@ -77,15 +105,17 @@ services:
       - my-network
     depends_on:
       - config-server
+      - eureka-discovery-server
     deploy:
       restart_policy:
         condition: on-failure
-        delay: 5s
+        delay: 30s
         max_attempts: 3
         window: 120s
     environment:
       SPRING_PROFILES_ACTIVE: prod
       SPRING_CONFIG_IMPORT: configserver:http://config-server:8071/
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-discovery-server:8070/eureka/
       
 networks:
   my-network:
