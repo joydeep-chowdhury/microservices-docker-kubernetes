@@ -29,6 +29,30 @@ services:
       SPRING_PROFILES_ACTIVE: prod
       SPRING_CONFIG_IMPORT: configserver:http://config-server:8071/
       
+  cloud-gateway-server:
+    image: joydeepchowdhury/cloud-gateway-server:0.0.1-SNAPSHOT
+    mem_limit: 700m
+    ports:
+      - "8072:8072"
+    networks:
+      - my-network
+    depends_on:
+      - config-server
+      - eureka-discovery-server
+      - loans-microservice
+      - cards-microservice
+      - accounts-microservice
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_CONFIG_IMPORT: configserver:http://config-server:8071/    
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-discovery-server:8070/eureka/
+      
   accounts-microservice:
     image: joydeepchowdhury/accounts-microservice:0.0.1-SNAPSHOT
     mem_limit: 700m

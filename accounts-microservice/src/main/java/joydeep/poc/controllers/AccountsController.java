@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -58,10 +59,11 @@ public class AccountsController {
 	 * "myCustomerDetailsFallBack")
 	 */
 	@Retry(name = "retryForCustomerDetails", fallbackMethod = "myCustomerDetailsFallBack")
-	public CustomerDetails myCustomerDetails(@RequestBody Customer customer) {
+	public CustomerDetails myCustomerDetails(@RequestHeader("joydeep-correlation-id") String corelationId,
+			@RequestBody Customer customer) {
 		Accounts accounts = accountsRepository.findByCustomerId(customer.getCustomerId());
-		List<Loans> loans = loansFeignClient.getLoansDetails(customer);
-		List<Cards> cards = cardsFeignClient.getCardDetails(customer);
+		List<Loans> loans = loansFeignClient.getLoansDetails(corelationId, customer);
+		List<Cards> cards = cardsFeignClient.getCardDetails(corelationId, customer);
 
 		CustomerDetails customerDetails = new CustomerDetails();
 		customerDetails.setAccounts(accounts);
@@ -72,9 +74,10 @@ public class AccountsController {
 
 	}
 
-	private CustomerDetails myCustomerDetailsFallBack(Customer customer, Throwable t) {
+	private CustomerDetails myCustomerDetailsFallBack(@RequestHeader("joydeep-correlation-id") String corelationId,
+			Customer customer, Throwable t) {
 		Accounts accounts = accountsRepository.findByCustomerId(customer.getCustomerId());
-		List<Loans> loans = loansFeignClient.getLoansDetails(customer);
+		List<Loans> loans = loansFeignClient.getLoansDetails(corelationId, customer);
 		CustomerDetails customerDetails = new CustomerDetails();
 		customerDetails.setAccounts(accounts);
 		customerDetails.setLoans(loans);
@@ -90,7 +93,7 @@ public class AccountsController {
 		String jsonStr = ow.writeValueAsString(properties);
 		return jsonStr;
 	}
-	
+
 	@GetMapping("/sayHello")
 	@RateLimiter(name = "sayHello", fallbackMethod = "sayHelloFallback")
 	public String sayHello() {
