@@ -10,7 +10,7 @@ import org.springframework.http.HttpHeaders;
 
 import reactor.core.publisher.Mono;
 
-@Configuration
+
 public class ResponseTraceFilter {
 
 	private static final Logger logger = LoggerFactory.getLogger(ResponseTraceFilter.class);

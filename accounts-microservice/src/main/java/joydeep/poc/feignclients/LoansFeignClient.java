@@ -14,6 +14,5 @@ import joydeep.poc.models.Loans;
 @FeignClient("loans-microservice")
 public interface LoansFeignClient {
 	@RequestMapping(method = RequestMethod.POST, value = "myLoans", consumes = "application/json")
-	List<Loans> getLoansDetails(@RequestHeader("joydeep-correlation-id") String corelationId,
-			@RequestBody Customer customer);
+	List<Loans> getLoansDetails(@RequestBody Customer customer);
 }

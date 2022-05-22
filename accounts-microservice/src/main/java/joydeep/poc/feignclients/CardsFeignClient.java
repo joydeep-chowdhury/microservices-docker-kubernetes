@@ -15,6 +15,5 @@ import joydeep.poc.models.Customer;
 public interface CardsFeignClient {
 
 	@RequestMapping(method = RequestMethod.POST, value = "myCards", consumes = "application/json")
-	List<Cards> getCardDetails(@RequestHeader("joydeep-correlation-id") String corelationId,
-			@RequestBody Customer customer);
+	List<Cards> getCardDetails(@RequestBody Customer customer);
 }

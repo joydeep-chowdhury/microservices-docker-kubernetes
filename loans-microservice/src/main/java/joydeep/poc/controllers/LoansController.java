@@ -2,6 +2,8 @@ package joydeep.poc.controllers;
 
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -22,7 +24,7 @@ import joydeep.poc.repositories.LoansRepository;
 @RestController
 public class LoansController {
 
-	
+	private static final Logger logger = LoggerFactory.getLogger(LoansController.class);
 	private final LoansRepository loansRepository;
 	private final LoansServiceConfig loansConfig;
 	
@@ -33,11 +35,14 @@ public class LoansController {
 	}
 
 	@PostMapping("/myLoans")
-	public List<Loans> getLoansDetails(@RequestHeader("joydeep-correlation-id") String corelationId, @RequestBody Customer customer) {
+	public List<Loans> getLoansDetails(@RequestBody Customer customer) {
+		logger.info("Executing {} started executing api /myLoans",this.getClass().getSimpleName());
 		List<Loans> loans = loansRepository.findByCustomerIdOrderByStartDtDesc(customer.getCustomerId());
 		if (loans != null) {
+			logger.info("Executing {} ended executing api /myLoans",this.getClass().getSimpleName());
 			return loans;
 		} else {
+			logger.info("Executing {} ended executing api /myLoans",this.getClass().getSimpleName());
 			return null;
 		}
 
@@ -45,10 +50,12 @@ public class LoansController {
 	
 	@GetMapping("/loans-microservice/config")
 	public String show() throws JsonProcessingException {
+		logger.info("Executing {} started executing api /loans-microservice/config",this.getClass().getSimpleName());
 		ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
 		Properties properties = new Properties(loansConfig.getMsg(), loansConfig.getBuildVersion(),
 				loansConfig.getMailDetails(), loansConfig.getActiveBranches());
 		String jsonStr = ow.writeValueAsString(properties);
+		logger.info("Executing {} ended executing api /loans-microservice/config",this.getClass().getSimpleName());
 		return jsonStr;
 	}
 

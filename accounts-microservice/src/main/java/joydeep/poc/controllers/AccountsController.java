@@ -2,6 +2,8 @@ package joydeep.poc.controllers;
 
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -28,7 +30,7 @@ import joydeep.poc.repositories.AccountsRepository;
 
 @RestController
 public class AccountsController {
-
+	private static final Logger logger = LoggerFactory.getLogger(AccountsController.class);
 	private final AccountsRepository accountsRepository;
 	private final AccountsServiceConfig accountsServiceConfig;
 	private final LoansFeignClient loansFeignClient;
@@ -45,10 +47,13 @@ public class AccountsController {
 
 	@PostMapping("/myAccount")
 	public Accounts getAccountsDetails(@RequestBody Customer customer) {
+		logger.info("Executing {} started executing api /myAccount ", this.getClass().getSimpleName());
 		Accounts account = accountsRepository.findByCustomerId(customer.getCustomerId());
 		if (account != null) {
+			logger.info("Executing {} ended executing api /myAccount ", this.getClass().getSimpleName());
 			return account;
 		} else {
+			logger.info("Executing {} ended executing api /myAccount ", this.getClass().getSimpleName());
 			return null;
 		}
 	}
@@ -59,25 +64,24 @@ public class AccountsController {
 	 * "myCustomerDetailsFallBack")
 	 */
 	@Retry(name = "retryForCustomerDetails", fallbackMethod = "myCustomerDetailsFallBack")
-	public CustomerDetails myCustomerDetails(@RequestHeader("joydeep-correlation-id") String corelationId,
-			@RequestBody Customer customer) {
+	public CustomerDetails myCustomerDetails(@RequestBody Customer customer) {
+		logger.info("Executing {} started executing api /myCustomerDetails", this.getClass().getSimpleName());
 		Accounts accounts = accountsRepository.findByCustomerId(customer.getCustomerId());
-		List<Loans> loans = loansFeignClient.getLoansDetails(corelationId, customer);
-		List<Cards> cards = cardsFeignClient.getCardDetails(corelationId, customer);
+		List<Loans> loans = loansFeignClient.getLoansDetails(customer);
+		List<Cards> cards = cardsFeignClient.getCardDetails(customer);
 
 		CustomerDetails customerDetails = new CustomerDetails();
 		customerDetails.setAccounts(accounts);
 		customerDetails.setLoans(loans);
 		customerDetails.setCards(cards);
-
+		logger.info("Executing {} ended executing api /myCustomerDetails ", this.getClass().getSimpleName());
 		return customerDetails;
 
 	}
 
-	private CustomerDetails myCustomerDetailsFallBack(@RequestHeader("joydeep-correlation-id") String corelationId,
-			Customer customer, Throwable t) {
+	private CustomerDetails myCustomerDetailsFallBack(Customer customer, Throwable t) {
 		Accounts accounts = accountsRepository.findByCustomerId(customer.getCustomerId());
-		List<Loans> loans = loansFeignClient.getLoansDetails(corelationId, customer);
+		List<Loans> loans = loansFeignClient.getLoansDetails(customer);
 		CustomerDetails customerDetails = new CustomerDetails();
 		customerDetails.setAccounts(accounts);
 		customerDetails.setLoans(loans);
@@ -87,20 +91,24 @@ public class AccountsController {
 
 	@GetMapping("/accounts-microservice/config")
 	public String show() throws JsonProcessingException {
+		logger.info("Executing {} started executing api /accounts-microservice/config",this.getClass().getSimpleName());
 		ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
 		Properties properties = new Properties(accountsServiceConfig.getMsg(), accountsServiceConfig.getBuildVersion(),
 				accountsServiceConfig.getMailDetails(), accountsServiceConfig.getActiveBranches());
 		String jsonStr = ow.writeValueAsString(properties);
+		logger.info("Executing {} ended executing api /accounts-microservice/config",this.getClass().getSimpleName());
 		return jsonStr;
 	}
 
 	@GetMapping("/sayHello")
 	@RateLimiter(name = "sayHello", fallbackMethod = "sayHelloFallback")
 	public String sayHello() {
+		logger.info("Executing {} started executing api /sayHello",this.getClass().getSimpleName());
 		return "Hello, Welcome to EazyBank";
 	}
 
 	private String sayHelloFallback(Throwable t) {
+		logger.info("Executing {} started executing method {} ",this.getClass().getSimpleName(),"sayHelloFallback");
 		return "Hi, Welcome to EazyBank";
 	}
 
