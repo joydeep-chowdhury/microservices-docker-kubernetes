@@ -1,0 +1,187 @@
+version: "3.8"
+
+services:
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - my-network
+
+  zipkin:
+    image: openzipkin/zipkin
+    mem_limit: 700m
+    ports:
+      - "9411:9411"
+    networks:
+      - my-network
+      
+
+
+  config-server:
+    image: joydeepchowdhury/config-server:0.0.1-SNAPSHOT
+    mem_limit: 700m
+    ports:
+      - "8071:8071"
+    depends_on:
+      - zipkin
+    networks:
+     - my-network
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 240s
+    environment:
+      SPRING_ZIPKIN_BASEURL: http://zipkin:9411/
+     
+     
+  eureka-discovery-server:
+    image: joydeepchowdhury/eureka-discovery-server:0.0.1-SNAPSHOT
+    mem_limit: 700m
+    ports:
+      - "8070:8070"
+    networks:
+     - my-network
+    depends_on:
+      - config-server
+      - zipkin
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 240s
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_CONFIG_IMPORT: configserver:http://config-server:8071/
+      SPRING_ZIPKIN_BASEURL: http://zipkin:9411/
+      
+  cloud-gateway-server:
+    image: joydeepchowdhury/cloud-gateway-server:0.0.1-SNAPSHOT
+    mem_limit: 700m
+    ports:
+      - "8072:8072"
+    networks:
+      - my-network
+    depends_on:
+      - config-server
+      - eureka-discovery-server
+      - loans-microservice
+      - cards-microservice
+      - accounts-microservice
+      - zipkin
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 240s
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_CONFIG_IMPORT: configserver:http://config-server:8071/    
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-discovery-server:8070/eureka/
+      SPRING_ZIPKIN_BASEURL: http://zipkin:9411/
+      
+  accounts-microservice:
+    image: joydeepchowdhury/accounts-microservice:0.0.1-SNAPSHOT
+    mem_limit: 700m
+    ports:
+      - "8080:8080"
+    networks:
+      - my-network
+    depends_on:
+      - config-server
+      - eureka-discovery-server
+      - loans-microservice
+      - cards-microservice
+      - zipkin
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 30s
+        max_attempts: 3
+        window: 240s
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_CONFIG_IMPORT: configserver:http://config-server:8071/
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-discovery-server:8070/eureka/
+      SPRING_ZIPKIN_BASEURL: http://zipkin:9411/
+      
+  accounts-microservice-second:
+    image: joydeepchowdhury/accounts-microservice:0.0.1-SNAPSHOT
+    mem_limit: 700m
+    ports:
+      - "8081:8080"
+    networks:
+      - my-network
+    depends_on:
+      - config-server
+      - eureka-discovery-server
+      - loans-microservice
+      - cards-microservice
+      - zipkin
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 30s
+        max_attempts: 3
+        window: 240s
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_CONFIG_IMPORT: configserver:http://config-server:8071/
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-discovery-server:8070/eureka/
+      SPRING_ZIPKIN_BASEURL: http://zipkin:9411/
+  
+  loans-microservice:
+    image: joydeepchowdhury/loans-microservice:0.0.1-SNAPSHOT
+    mem_limit: 700m
+    ports:
+      - "8090:8090"
+    networks:
+      - my-network
+    depends_on:
+      - config-server
+      - eureka-discovery-server
+      - zipkin
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 30s
+        max_attempts: 3
+        window: 240s
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_CONFIG_IMPORT: configserver:http://config-server:8071/
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-discovery-server:8070/eureka/
+      SPRING_ZIPKIN_BASEURL: http://zipkin:9411/
+    
+  cards-microservice:
+    image: joydeepchowdhury/cards-microservice:0.0.1-SNAPSHOT
+    mem_limit: 700m
+    ports:
+      - "8100:8100"
+    networks:
+      - my-network
+    depends_on:
+      - config-server
+      - eureka-discovery-server
+      - zipkin
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 30s
+        max_attempts: 3
+        window: 240s
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_CONFIG_IMPORT: configserver:http://config-server:8071/
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-discovery-server:8070/eureka/
+      SPRING_ZIPKIN_BASEURL: http://zipkin:9411/
+      
+networks:
+  my-network:

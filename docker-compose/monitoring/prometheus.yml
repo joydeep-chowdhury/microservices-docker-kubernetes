@@ -1,0 +1,21 @@
+global:
+  scrape_interval: 5s
+  evaluation_interval: 5s
+  
+scrape_configs:
+  - job_name: 'accounts-microservice'
+    metrics_path: '/actuator/prometheus'
+    static_configs: 
+      - targets: ['accounts-microservice:8080']
+  - job_name: 'accounts-microservice-second'
+    metrics_path: '/actuator/prometheus'
+    static_configs: 
+      - targets: ['accounts-microservice-second:8081']
+  - job_name: 'loans-microservice'
+    metrics_path: '/actuator/prometheus'
+    static_configs: 
+      - targets: ['loans-microservice:8090']
+  - job_name: 'cards-microservice'
+    metrics_path: '/actuator/prometheus'
+    static_configs: 
+      - targets: ['cards-microservice:8100']
